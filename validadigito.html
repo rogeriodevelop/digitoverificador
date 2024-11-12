@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valida Dígito Verificador</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #0062cc, #00a4ff);
+        }
+        .container {
+            width: 400px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .container h1 {
+            margin-bottom: 20px;
+            color: #007BFF;
+            font-size: 24px;
+        }
+        .container label {
+            font-weight: bold;
+            color: #333;
+            display: block;
+            margin: 10px 0 5px;
+        }
+        .container input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .container button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .container button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Valida Dígito Verificador</h1>
+        <label for="chave">Insira a Chave de Acesso</label>
+        <input type="text" id="chave" placeholder="Ex: 4224115598906300010465001000000200192408000">
+        <button onclick="validarDV()">Validar Dígito Verificador</button>
+        <div id="resultado" class="result"></div>
+    </div>
+
+    <script>
+        function validarDV() {
+            const chave = document.getElementById('chave').value;
+
+            if (chave.length !== 43) {
+                document.getElementById('resultado').innerText = "A chave deve ter 43 dígitos.";
+                return;
+            }
+
+            const multiplicadores = [2, 3, 4, 5, 6, 7, 8, 9];
+            let soma = 0;
+
+            for (let i = 0; i < chave.length; i++) {
+                let digito = parseInt(chave.charAt(42 - i));
+                let multiplicador = multiplicadores[i % multiplicadores.length];
+                soma += digito * multiplicador;
+            }
+
+            let resto = soma % 11;
+            let dvCalculado = (resto === 0 || resto === 1) ? 0 : 11 - resto;
+
+            document.getElementById('resultado').innerText = `Dígito Verificador: ${dvCalculado}`;
+        }
+    </script>
+
+</body>
+</html>
