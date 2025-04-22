@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validador de Chave de Acesso NFe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #0062cc, #00a4ff);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+        }
+        h1 {
+            color: #007BFF;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        #submit {
+            background-color: #28a745;
+            color: white;
+        }
+        #submit:hover {
+            background-color: #218838;
+        }
+        #limpar {
+            background-color: #dc3545;
+            color: white;
+        }
+        #limpar:hover {
+            background-color: #c82333;
+        }
+        .resultados {
+            margin-top: 25px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .key-part {
+            display: flex;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #ddd;
+        }
+        .key-part:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .key-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 250px;
+        }
+        .key-value {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        .modelo-correct {
+            color: #28a745;
+        }
+        .modelo-incorrect {
+            color: #dc3545;
+        }
+        .dv-correct {
+            color: #28a745;
+        }
+        .dv-incorrect {
+            color: #dc3545;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Validador de Chave de Acesso NFe</h1>
+        
+        <div class="input-group">
+            <label for="numero">Chave de Acesso (44 dígitos):</label>
+            <input type="text" id="numero" placeholder="Ex: 42241155989063000104650010000002001924080008" maxlength="44">
+        </div>
+        
+        <div class="button-group">
+            <button id="submit">Validar</button>
+            <button id="limpar">Limpar</button>
+        </div>
+        
+        <div id="alert" class="alert" style="display: none;"></div>
+        
+        <div id="resultados" class="resultados" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const submit = document.querySelector("#submit");
+            const resultado = document.querySelector("#resultados");
+            const limpar = document.querySelector("#limpar");
+            const alertDiv = document.querySelector("#alert");
+            const inputChave = document.querySelector("#numero");
+
+            // Permitir apenas números no input
+            inputChave.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+
+            submit.addEventListener("click", validarChave);
+            limpar.addEventListener("click", limparCampos);
+
+            // Validar ao pressionar Enter
+            inputChave.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    validarChave();
+                }
+            });
+
+            function limparCampos() {
+                inputChave.value = '';
+                resultado.style.display = 'none';
+                resultado.innerHTML = '';
+                alertDiv.style.display = 'none';
+                inputChave.focus();
+            }
+
+            function validarChave() {
+                const chave = inputChave.value.trim();
+                
+                // Esconder alertas e resultados anteriores
+                alertDiv.style.display = 'none';
+                resultado.style.display = 'none';
+                
+                // Validações básicas
+                if (chave.length === 0) {
+                    showAlert('Por favor, insira a chave de acesso', 'error');
+                    return;
+                }
+                
+                if (chave.length !== 44) {
+                    showAlert('A chave deve ter exatamente 44 dígitos', 'error');
+                    return;
+                }
+                
+                if (isNaN(chave)) {
+                    showAlert('A chave deve conter apenas números', 'error');
+                    return;
+                }
+
+                // Fatiar a chave
+                const uf = chave.slice(0, 2);
+                const anoMes = chave.slice(2, 6);
+                const cnpjEmit = formatCNPJ(chave.slice(6, 20));
+                const modeloDoc = chave.slice(20, 22);
+                const serieDoc = chave.slice(22, 25);
+                const numeroDoc = chave.slice(25, 34);
+                const formaEmissao = chave[34];
+                const codNumerico = chave.slice(35, 43);
+                const digitoVerificador = chave[43];
+                
+                // Calcular DV
+                const dvCalculado = calcularDigitoVerificador(chave.slice(0, 43));
+                const dvValido = digitoVerificador == dvCalculado;
+                
+                // Mostrar resultados
+                resultado.innerHTML = `
+                    <div class="key-part">
+                        <span class="key-label">Código da UF do emitente:</span>
+                        <span class="key-value">${uf}</span>
+                    </div>
+                    <div class="key-part">
+                        <span class="key-label">Ano e Mês de emissão (AAMM):</span>
+                        <span class="key-value">${anoMes}</span>
+                    </div>
+                    <div class="key-part">
+                        <span class="key-label">CNPJ do emitente:</span>
+                        <span class="key-value">${cnpjEmit}</span>
+                    </div>
+                    <div class="key-part">
+                        <span class="key-label">Modelo do Documento Fiscal:</span>
+                        <span class="key-value ${modeloDoc === '55' ? 'modelo-correct' : 'modelo-incorrect'}">
+                            ${modeloDoc} ${modeloDoc === '55' ? '' : '(Modelo incorreto, deve ser 55)'}
+                        </span>
+                    </div>
+                    <div class="key-part">
+                        <span class="key-label">Série do Documento Fiscal:</span>
+                        <span class="key-value">${serieDoc}</span>
+                    </div>
+                    <div class="key-part">
+                        <span class="key-label">Número do Documento Fiscal:</span>
+                        <span class="key-value">${numeroDoc}</span>
+                    </div>
+                    <div class="key-part">
+                        <span class="key-label">Forma de emissão:</span>
+                        <span class="key-value">${formaEmissao}</span>
+                    </div>
+                    <div class="key-part">
+                        <span class="key-label">Código Numérico:</span>
+                        <span class="key-value">${codNumerico}</span>
+                    </div>
+                    <div class="key-part">
+                        <span class="key-label">Dígito Verificador:</span>
+                        <span class="key-value ${dvValido ? 'dv-correct' : 'dv-incorrect'}">
+                            ${digitoVerificador} ${dvValido ? '(Válido)' : '(Inválido, deveria ser ' + dvCalculado + ')'}
+                        </span>
+                    </div>
+                `;
+                
+                resultado.style.display = 'block';
+                
+                if (!dvValido || modeloDoc !== '55') {
+                    showAlert('Atenção: Foram encontrados problemas na chave', 'error');
+                } else {
+                    showAlert('Chave validada com sucesso!', 'success');
+                }
+            }
+            
+            function calcularDigitoVerificador(chaveSemDV) {
+                const multiplicadores = [2, 3, 4, 5, 6, 7, 8, 9];
+                let soma = 0;
+                
+                for (let i = 0; i < chaveSemDV.length; i++) {
+                    let digito = parseInt(chaveSemDV.charAt(42 - i));
+                    let multiplicador = multiplicadores[i % multiplicadores.length];
+                    soma += digito * multiplicador;
+                }
+                
+                let resto = soma % 11;
+                return (resto === 0 || resto === 1) ? 0 : 11 - resto;
+            }
+            
+            function formatCNPJ(cnpj) {
+                return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+            }
+            
+            function showAlert(message, type) {
+                alertDiv.textContent = message;
+                alertDiv.className = `alert alert-${type}`;
+                alertDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
